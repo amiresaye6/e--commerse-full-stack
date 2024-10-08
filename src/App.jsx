@@ -1,15 +1,16 @@
 import { ColorModeContext, useMode } from "./theme";
 import { CssBaseline, ThemeProvider } from "@mui/material";
+import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import SignupCard from "./components/LoginSignup/SignupCard";
 import LoginCard from "./components/LoginSignup/LoginCard";
 import ContactUsCard from "./components/contacts/ContactUsCard";
-// import Header1 from "./components/header/Header1";
-// import Header2 from "./components/header/Header2";
-// import Header3 from "./components/header/Header3";
-
+import HomePage from "./components/HomePage.jsx"; // You'll need to create this component
+import { useSelector } from "react-redux";
 
 function App() {
   const [theme, colorMode] = useMode();
+  const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
+
   return (
     <ColorModeContext.Provider 
 // @ts-ignore
@@ -18,17 +19,21 @@ function App() {
 // @ts-ignore
       theme={theme}>
         <CssBaseline />
-        {/* <Header1 />
-        <Header2 />
-        <Header3 /> */}
-        <LoginCard />
-        <SignupCard />
-        <ContactUsCard />
+        <Router>
+          <Routes>
+            <Route path="/signup" element={<SignupCard />} />
+            <Route path="/login" element={<LoginCard />} />
+            <Route path="/contact" element={<ContactUsCard />} />
+            <Route 
+              path="/" 
+              element={isLoggedIn ? <HomePage /> : <Navigate to="/login" />} 
+            />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Router>
       </ThemeProvider>
     </ColorModeContext.Provider>
   );
 }
 
 export default App;
-
-

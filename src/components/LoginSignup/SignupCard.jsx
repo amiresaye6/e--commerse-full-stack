@@ -1,11 +1,15 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, TextField, Typography, Button, Checkbox, FormControlLabel, IconButton, InputAdornment } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-// import { useTheme } from '@mui/material/styles';
+import { useDispatch, useSelector } from 'react-redux';
+import { signupUser } from '../../redux/userSlice';
+import { useNavigate } from 'react-router-dom';
 
 const SignupCard = () => {
-//   const theme = useTheme(); // For detecting light/dark mode
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { error, loading } = useSelector((state) => state.user);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,11 +45,22 @@ const SignupCard = () => {
   const isEmailValid = email === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isPasswordMatch = confirmPassword === '' || password === confirmPassword;
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (isEmailValid && isPasswordMatch && passwordCriteria.hasLetter && passwordCriteria.hasNumber && passwordCriteria.hasSpecialChar) {
+      const result = await dispatch(signupUser({ name, email, password }));
+      if (!result.error) {
+        navigate('/login');
+      }
+    }
+  };
+
   return (
     <Card sx={{ maxWidth: 400, margin: 'auto', marginTop: '10vh', padding: 2 }}>
       <CardContent>
         <Typography variant="h5" align="center">Sign Up</Typography>
-        <form>
+        {error && <Typography color="error">{error}</Typography>}
+        <form onSubmit={handleSubmit}>
           <TextField
             label="Name"
             type="text"
@@ -53,6 +68,7 @@ const SignupCard = () => {
             onChange={handleNameChange}
             fullWidth
             margin="normal"
+            required
           />
 
           <TextField
@@ -62,6 +78,7 @@ const SignupCard = () => {
             onChange={handleEmailChange}
             fullWidth
             margin="normal"
+            required
             error={!isEmailValid}
             helperText={isEmailValid ? '' : 'Please enter a valid email'}
           />
@@ -73,11 +90,33 @@ const SignupCard = () => {
             onChange={handlePasswordChange}
             fullWidth
             margin="normal"
+            required
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton onClick={handleClickShowPassword} edge="end">
                     {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <TextField
+            label="Confirm Password"
+            type={showConfirmPassword ? 'text' : 'password'}
+            value={confirmPassword}
+            onChange={handleConfirmPasswordChange}
+            fullWidth
+            margin="normal"
+            required
+            error={!isPasswordMatch}
+            helperText={isPasswordMatch ? '' : 'Passwords do not match'}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={handleClickShowConfirmPassword} edge="end">
+                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
                 </InputAdornment>
               ),
@@ -97,26 +136,6 @@ const SignupCard = () => {
             </Typography>
           </div>
 
-          <TextField
-            label="Confirm Password"
-            type={showConfirmPassword ? 'text' : 'password'}
-            value={confirmPassword}
-            onChange={handleConfirmPasswordChange}
-            fullWidth
-            margin="normal"
-            error={!isPasswordMatch}
-            helperText={isPasswordMatch ? '' : 'Passwords do not match'}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={handleClickShowConfirmPassword} edge="end">
-                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-
           <FormControlLabel
             control={<Checkbox checked={rememberMe} onChange={handleRememberMeChange} />}
             label="Remember me"
@@ -128,10 +147,18 @@ const SignupCard = () => {
             color="primary"
             fullWidth
             sx={{ marginTop: 2 }}
+            disabled={loading}
           >
-            Sign Up
+            {loading ? 'Signing up...' : 'Sign Up'}
           </Button>
         </form>
+        <Button
+          onClick={() => navigate('/login')}
+          fullWidth
+          sx={{ marginTop: 1 }}
+        >
+          Already have an account? Login
+        </Button>
       </CardContent>
     </Card>
   );
